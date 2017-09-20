@@ -24,7 +24,8 @@ or
 ## Examples
 ![Y U No meme](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/YUNo_meme.jpg "Y U No meme")
 
-```                                                                                 `     `  -_^?\TIfu[3Z32}CJ7*^~``    `                                                         
+<code>
+                                                                                 `     `  -_^?\TIfu[3Z32}CJ7*^~``    `                                                         
                                                                                  `,?1uVmO8#BQ@@Qg0bHOOdD%0N#BQBNDhau1*:-                                                       
                                                                          ``'>_.LoDBQ#b6GV2]J7*r"'`        `.'_^?7I2490BNdE[cr'`   ``                                           
                                                                       -=IyHB@90Q@#3=-    `                          ``,*IaOg@gHGf*'`                                           
@@ -112,4 +113,4 @@ g@@N[_`                                                                         
 ` `                                                                                  +OE'`                                                                                     
                                                                                     )WV.                                                                                       
                                                                                  ` TBo``                                                                                       
-```
+</code>
