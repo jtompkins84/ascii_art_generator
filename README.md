@@ -22,8 +22,9 @@ or
 - Resulting files are output as text files to the same directory as the image. Use a text editor to view the results. You may need to drastically reduce the font size and linespacing. Suggested font is "Monospace," though if that is unavailable, most fonts should produce acceptable results.
 
 ## Examples
+### Original Image
 ![Y U No meme](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/YUNo_meme.jpg "Y U No meme")
-
+### Generated ASCII Art (viewed using "Monospace" font in Gedit, 4pt font size)
 ![Y U No ASCII art](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/yuno_example.PNG "Y U No ASCII art")
-
+### "Zoomed" version of above (font enlarged to 10pt)
 ![Y U No ASCII art zoomed](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/yuno_example_zoomed.PNG "Y U No ASCII art zoomed")
