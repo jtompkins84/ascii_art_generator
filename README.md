@@ -24,6 +24,6 @@ or
 ## Examples
 ![Y U No meme](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/YUNo_meme.jpg "Y U No meme")
 
-![Y U No ASCII art](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/YUNo_example.png "Y U No ASCII art")
+![Y U No ASCII art](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/yuno_example.PNG "Y U No ASCII art")
 
-![Y U No ASCII art zoomed](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/YUNo_example_zoom.png "Y U No ASCII art zoomed")
+![Y U No ASCII art zoomed](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/yuno_example_zoomed.PNG "Y U No ASCII art zoomed")
