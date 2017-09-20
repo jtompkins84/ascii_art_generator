@@ -22,6 +22,8 @@ or
 - Resulting files are output as text files to the same directory as the image. Use a text editor to view the results. You may need to drastically reduce the font size and linespacing. Suggested font is "Monospace," though if that is unavailable, most fonts should produce acceptable results.
 
 ## Examples
+![doge meme](https://github.com/jtompkins/dog.png "doge meme")
+
 ```444444444444444444444444444443Yf244444444444444444444444444444444444444444444444444444
 44444444444444444444444444444c)Yf2V4444444444444444444444444444444a3u3Za44444444444444
 44444444444444444444444444444\\J3u]244444444444444444444444444444[JJJJ]y44444444444444
