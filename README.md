@@ -9,8 +9,8 @@ Converts images to ASCII art text files.
 ## Usage
 ### Linux
 - Change to directory and run on terminal:
-`./ascii_art.py *image_file*`
+```./ascii_art.py *image_file*```
 or
-`python ascii_art.py *image_file*`
+```python ascii_art.py *image_file*```
 
 ## Examples
