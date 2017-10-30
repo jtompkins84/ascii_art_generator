@@ -105,45 +105,6 @@ def __build_sorted_symbol_list(value_to_symbol_map):
     return sorted_symbol_list
 
 
-def __fill_distribution_value_map(value_to_symbol_map, sorted_symbols_list):
-    """
-    Distributes value-to-symbol mappings by filling gaps between clamped norm values of symbols.
-
-    Due to the fact that there are fewer than 256 visible ascii symbols, each gray-scale value between 0 and 255 cannot
-    receive a unique character mapping. Fill Distribution takes the difference between the clamped-norms and distributes
-    a range of values to each symbol by dividing the difference by 2 and
-
-    e.g. Two consecutive symbols from the reduced sorted symbols list have clamped norm values: '@' => 0 and 'Q' => 42.
-    Gray-scale values 0 through 42 will be split in half, such that values 0 through 20 will be mapped to '@' and
-    values 21 trough 42 are mapped to 'Q'.
-    """
-
-    for sym in sorted_symbols_list:
-        val = value_to_symbol_map[sym]
-        print '{' + str(val) + ' : ' + chr(sym) + ' = \'' + str(sym) + '\' }'
-
-    curr = 0
-    for val in range(256):
-        if val in value_to_symbol_map:
-            print str(val) + ' found in value_to_symbol_map. Symbol: ' + value_to_symbol_map[val]
-            if sorted_symbols_list[curr] != ord(value_to_symbol_map[val]):
-                curr += 1
-            continue
-        else:
-            curr_sym = sorted_symbols_list[curr]
-            next_sym = sorted_symbols_list[curr + 1]
-            next_val = value_to_symbol_map[next_sym]
-            R = range(val, next_val)
-            half = int(len(R) / 2) + (val - 1)
-            print R
-            for i in R:
-                val += 1
-                if i < half:
-                    value_to_symbol_map[i] = chr(curr_sym)
-                else:
-                    value_to_symbol_map[i] = chr(next_sym)
-
-
 def __build_distributed_value_to_symbol_map(symbol_to_value_map, sorted_symbols_list, distribution):
     value_to_ascii_map = dict()
     D = 0
@@ -159,9 +120,8 @@ def __even_distribution(sorted_symbols_list):
     """
     Distributes value-to-symbol mappings by giving values equal partitions.
 
-    Due to the fact that there are fewer than 256 visible ASCII symbols, each gray-scale value between 0 and 255 cannot
-    receive a unique character mapping. Even Distribution evenly partitions the gray-scale color space values (0 - 255)
-    across all available ASCII symbols, 67 total symbols when using the reduced symbols list.
+    Even Distribution evenly partitions the gray-scale color space values (0 - 255) across all available ASCII symbols
+    in the sorted symbols list.
 
     e.g. If partition size is determined to be 4 values, each consecutive 4 values in the value-to-symbol map will
     map to the same symbol. Values 0 - 3 map to '@', values 4 - 7 map to 'Q', etc.
@@ -181,12 +141,11 @@ def __fill_distribution(sorted_symbols_list, value_to_symbol_map):
     """
     Distributes value-to-symbol mappings by filling gaps between clamped norm values of symbols.
 
-    Due to the fact that there are fewer than 256 visible ascii symbols, each gray-scale value between 0 and 255 cannot
-    receive a unique character mapping. Fill Distribution takes the difference between each clamped-norm and distributes
+    Fill Distribution takes the difference between each clamped-norm and distributes
     a range of values to each symbol by dividing the difference by 2 and adding the result to the distribution for each
     symbol.
 
-    e.g. Two consecutive symbols from the reduced sorted symbols list have clamped norm values: '@' => 0 and 'Q' => 42.
+    e.g. Two consecutive symbols from the sorted symbols list have clamped norm values: '@' => 0 and 'Q' => 42.
     Gray-scale values 0 through 42 will be split in half, such that values 0 through 20 will be mapped to '@' and
     values 21 trough 42 are mapped to 'Q'.
 
