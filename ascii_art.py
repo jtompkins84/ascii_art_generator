@@ -19,11 +19,11 @@ def __handle_args():
     """
     global IMAGES, SCALE, SCALE_X, SCALE_Y, DEBUG, DISTR_TYPE
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--scale', type=float, nargs=1, default=0.25,
+    parser.add_argument('-s', '--scale', type=float, default=0.25,
                         help="Scales the image by this factor before generating the ASCII art text file.")
-    parser.add_argument('-x', '--scale-x', type=float, nargs=1, default=2.25,
+    parser.add_argument('-x', '--scale-x', type=float, default=2.0,
                         help="Scales the width of the image by the following factor before generating the ASCII art text file. Default value works best with Monospace font.")
-    parser.add_argument('-y', '--scale-y', type=float, nargs=1, default=1.0,
+    parser.add_argument('-y', '--scale-y', type=float, default=1.0,
                         help="Scales the height of the image by the following factor before generating the ASCII art text file. Default value works best with Monospace font.")
     parser.add_argument('--debug', action='store_true',
                         help="Prints some useful debug information.")
@@ -37,8 +37,6 @@ def __handle_args():
         return False
 
     SCALE = args.scale
-    if type(SCALE) is not float:
-        SCALE = float(SCALE[0])
     SCALE_X = args.scale_x
     SCALE_Y = args.scale_y
 
