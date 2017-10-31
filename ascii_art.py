@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 
 import cv2
-import csv
 import argparse
+import symmap
 
 IMAGES = list()
 FILE_NAMES = list()
 VALUE_MAP = './value_map'
-DEBUG = False
 SCALE = 0.25
-value_to_symbol_map = dict()
+value_to_ascii_map = dict()
 
 def __handle_args():
     """
@@ -18,11 +17,13 @@ def __handle_args():
     :param args: list of arguments
     :return: False if no image files were entered
     """
-    global IMAGES, SCALE, DEBUG
+    global IMAGES, SCALE, DEBUG, DISTR_TYPE
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--scale', type=float, nargs=1, default=0.25)
-    parser.add_argument('-d', '--debug', action='store_true')
-    parser.add_argument('files', type=str, nargs='+')
+    parser.add_argument('-s', '--scale', type=float, nargs=1, default=0.25, help="Scales the image by this factor before generating the ASCII art text file.")
+    parser.add_argument('--debug', action='store_true', help="Prints some useful debug information.")
+    parser.add_argument('-d', '--distribution', choices=['even', 'fill', 'normal'],
+                        default='normal', help="Try different distributions to achieve better results!")
+    parser.add_argument('files', type=str, nargs='+', help="The images files to convert to ASCII art.")
     args = parser.parse_args()
 
     images = args.files
@@ -38,7 +39,7 @@ def __handle_args():
         img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
         # 2 * SCALE on X-axis --> images need to be 'stretched' horizontally in order not to appear 'squished' after
         # being converted to ascii text.
-        img = cv2.resize(img, None, fx=(SCALE*2.0), fy=SCALE, interpolation=cv2.INTER_AREA)
+        img = cv2.resize(img, None, fx=(SCALE*2.25), fy=SCALE, interpolation=cv2.INTER_AREA)
         if img.size == 0:
             print 'Unable to read file \'' + image + '\'.'
         else:
@@ -46,21 +47,9 @@ def __handle_args():
             FILE_NAMES.append(image[:-4])
 
     DEBUG = args.debug
+    DISTR_TYPE = args.distribution
 
     return True
-
-
-def __load_value_map():
-    """
-    Loads the value-to-symbol mapping used to map gray scale values to ascii symbols.
-    """
-    with open(VALUE_MAP, 'r') as val_map_file:
-        reader = csv.DictReader(val_map_file)
-        for row in reader:
-            value_to_symbol_map[int(row['value'])] = row['symbol']
-
-        val_map_file.close()
-        print 'value-to-symbol map loaded..'
 
 
 def __make_ascii_art():
@@ -70,17 +59,21 @@ def __make_ascii_art():
     for i in range(len(IMAGES)):
         img = IMAGES[i]
         file_name = FILE_NAMES[i]
-        height, width = img.shape[:2]
+        value_to_ascii_map = symmap.get_value2ascii_map(img, DISTR_TYPE)
+        h, w = img.shape[:2]
+        test = None
         result = list()
-        for i in range(height):
+        for i in range(h):
             row = None
             # Map gray scale values to ascii characters and concat to 'row' character string.
-            for j in range(width):
+            for j in range(w):
                 if row is None:
-                    row = value_to_symbol_map[int(img[i][j])]
+                    row = value_to_ascii_map[int(img[i][j])]
                 else:
-                    row += value_to_symbol_map[int(img[i][j])]
-            # Append row to result list. Rows are appended in order from top to bottom.
+                    row += value_to_ascii_map[int(img[i][j])]
+            # Append row to result list. Rows a   re appended in order from top to bottom.
+            if DEBUG:
+                print "width= " + str(w) + "len(row)= " + str(len(row))
             result.append(row)
 
         # Write ascii symbols to text file.
@@ -97,7 +90,6 @@ def main():
         print 'No valid image file argument was given.'
         return
 
-    __load_value_map()
     __make_ascii_art()
 
 

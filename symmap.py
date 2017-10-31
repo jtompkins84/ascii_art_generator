@@ -3,12 +3,14 @@
 import os
 import cv2
 import csv
-
+import math
 
 # symbol_to_norm_map format:             {ord(symbol): norm value}
 # clamped_value_to_symbol_dict format:   {ord(symbol): clamped norm value}
 # sorted_symbol_list format:             list of symbols sorted by norm values
-# value_to_symbol_map format:            {int(clamped norm): ord(symbol)}
+# value_to_ascii_map format:            {int(clamped norm): ord(symbol)}
+
+VALUE_MAP = './value_map'
 
 
 def __build_symbol_to_norm_map(symbols_filepath='./symbols.png'):
@@ -105,13 +107,12 @@ def __build_sorted_symbol_list(value_to_symbol_map):
     return sorted_symbol_list
 
 
-def __build_distributed_value_to_symbol_map(symbol_to_value_map, sorted_symbols_list, distribution):
+def __build_distributed_value_to_ascii_map(sorted_symbols_list, distribution):
     value_to_ascii_map = dict()
     D = 0
     for i in range(len(sorted_symbols_list)):
         for j in range(distribution[i]):
-            print D
-            value_to_ascii_map[D] = chr(sorted_symbols_list[i])
+            value_to_ascii_map[D] = chr(int(sorted_symbols_list[i]))
             D += 1
     return value_to_ascii_map
 
@@ -126,8 +127,8 @@ def __even_distribution(sorted_symbols_list):
     e.g. If partition size is determined to be 4 values, each consecutive 4 values in the value-to-symbol map will
     map to the same symbol. Values 0 - 3 map to '@', values 4 - 7 map to 'Q', etc.
 
-    :returns: A list of each symbols distribution over the range of values from 0 to 255. The distribution list will
-    be the same length as sorted_symbols_list.
+    :returns: A list of each symbol's distribution. The values of the list represent the number of times the
+    character should appear when mapping gray-scale values to a symbol.
     """
     N = len(sorted_symbols_list)
     distribution = [int(256 / N)] * N
@@ -149,8 +150,8 @@ def __fill_distribution(sorted_symbols_list, value_to_symbol_map):
     Gray-scale values 0 through 42 will be split in half, such that values 0 through 20 will be mapped to '@' and
     values 21 trough 42 are mapped to 'Q'.
 
-    :returns: A list of each symbols distribution over the range of values from 0 to 255. The distribution list will
-    be the same length as sorted_symbols_list.
+    :returns: A list of each symbol's distribution. The values of the list represent the number of times the
+    character should appear when mapping gray-scale values to a symbol.
     """
     N = len(sorted_symbols_list)
     values_list = [key for key in value_to_symbol_map]
@@ -169,7 +170,91 @@ def __fill_distribution(sorted_symbols_list, value_to_symbol_map):
     return distribution
 
 
-def __write_value_map(value_to_symbol_map, file_name='./value_map'):
+def __normal_distribution(sorted_symbols_list, mean, sigma2):
+    """
+    Distributes value-to-symbol mappings using Gaussian probability distribution.
+
+    :returns: A list of each symbol's distribution. The values of the list represent the number of times the
+    character should appear when mapping gray-scale values to a symbol.
+    """
+    N = len(sorted_symbols_list)
+    G = 256.0 / (N-1) # the width of a distribution for each symbol
+    distribution = [(G * i) for i in range(N-1)]
+    distribution.append(256.0)
+    for i in range(N):
+        g = distribution[i]
+        d = (1 / (2 * math.pi * sigma2)) * math.exp(-((g - mean)**2) / (2 * sigma2)) # gaussian distribution formula
+        distribution[i] = d
+    min_val = min(distribution)
+    max_val = max(distribution)
+    for i in range(N):
+        val = distribution[i]
+        distribution[i] = (val - min_val) * (1 / (max_val - min_val)) # clamp values between 0 and 1
+        distribution[i] = abs(1.0 - distribution[i])
+        # The above inverts distribution such that higher probability values now contribute less to the sum.
+        # This is necessary so that values closer to the mean are associated with more unique characters than those
+        # further from the mean.
+    S = sum(distribution)
+    # Iterate over and divide each distribution value by the sum, normalizing each value.
+    # If value after truncation is zero, set value to 1.
+    for i in range(N):
+        d = 256 * (distribution[i] / float(S))
+        if int(d) < 1:
+            d = 1
+        distribution[i] = int(d)
+    # The sum of the distribution at this point should technically be 256, but will usually be a number less than 256
+    # because the quotient above is converted into and int, truncating the values. Also, zero values are artificially
+    # being set to 1.
+    dif = 256 - sum(distribution) # gives the remaining number of distribution points to distribute
+    i = 0
+    j = N - 1
+    rng = range(N)
+    # Iterates from both sides of the list and adds 1 to the highest value. If there is a tie, both receive +1. This
+    # continues until dif == 0.
+    # TODO   Improve algorithm to recognize when one side of the distribution should increment over the other.
+    # TODO   I.E. max value on either side of mean is 5, right side has six 5's and left side has three 5's,
+    # TODO   then the algorithm should iterate and increment over the right side 3 times before incrementing any values on the left.
+    while dif > 0 and i in rng and j in rng:
+        if distribution[i] == distribution[j]:
+            distribution[i] += 1            # increment distribution
+            dif -= 1                        # decrement number of distribution points left to distribute
+            i += 1                          # increment left iterator
+            if dif > 0:
+                distribution[j] += 1        # increment distribution
+                dif -=1                     # decrement number of distribution points left to distribute
+                j -=1                       # decrement right iterator
+        elif distribution[i] > distribution[j]:
+            distribution[i] += 1
+            dif -= 1
+            i += 1
+        elif distribution[j] > distribution[i]:
+            distribution[j] += 1
+            dif -= 1
+            j -= 1
+    # distribution now sums to 256
+    return distribution
+
+
+def __calc_mean_sigma(img):
+    height, width = img.shape[:2]
+    N = width * height
+    mean = sigma2 = 0
+    for i in range(height):
+        for j in range(width):
+            mean += img[i][j]
+    mean = mean / N
+    for i in range(height):
+        for j in range(width):
+            sigma2 += (img[i][j] - mean)**2
+    sigma2 = sigma2 / (N-1)
+    return mean, sigma2
+
+
+def __write_value_map(value_to_symbol_map=None, file_name='./value_map'):
+    if value_to_symbol_map is None:
+        symbol_to_norm_map = __build_symbol_to_norm_map()
+        clamped_symbol_to_norm_map = __build_clamped_symbol_to_norm_map(symbol_to_norm_map)
+        value_to_symbol_map = __build_value_to_symbol_map(clamped_symbol_to_norm_map)
     f = open(file_name, 'w')
     writer = csv.DictWriter(f, fieldnames=['value', 'symbol'])
 
@@ -180,8 +265,36 @@ def __write_value_map(value_to_symbol_map, file_name='./value_map'):
     f.close()
 
 
+def __load_value_map():
+    """
+    Loads the value-to-symbol mapping used to map gray scale values to ascii symbols.
+    """
+    value_to_symbol_map = dict()
+    with open(VALUE_MAP, 'r') as val_map_file:
+        reader = csv.DictReader(val_map_file)
+        for row in reader:
+            value_to_symbol_map[int(row['value'])] = row['symbol']
+
+        val_map_file.close()
+        print 'value-to-symbol map loaded..'
+    return value_to_symbol_map
+
+
 def __is_special_char(sym):
     return (sym < 65 or (sym > 90 and sym < 97) or sym > 122)
+
+
+def get_value2ascii_map(img=None, distr_type='even'):
+    distribution = None
+    if distr_type == 'even':
+        distribution = __even_distribution(sorted_symbol_list)
+    elif distr_type == 'fill':
+        distribution = __fill_distribution(sorted_symbol_list, value_to_symbol_map)
+    elif distr_type == 'normal':
+        mean, s2 = __calc_mean_sigma(img)
+        distribution = __normal_distribution(sorted_symbol_list, mean, s2)
+    value_to_ascii_map = __build_distributed_value_to_ascii_map(sorted_symbol_list, distribution)
+    return value_to_ascii_map
 
 
 def main():
@@ -190,14 +303,20 @@ def main():
     value_to_symbol_map = __build_value_to_symbol_map(clamped_symbol_to_norm_map)
     sorted_symbol_list = __build_sorted_symbol_list(value_to_symbol_map)
     even_distr = __even_distribution(sorted_symbol_list)
-    # fill_distr = __fill_distribution(sorted_symbol_list, value_to_symbol_map) # DEBUG
-    value_to_ascii_map = __build_distributed_value_to_symbol_map(clamped_symbol_to_norm_map, sorted_symbol_list, even_distr)
+    fill_distr = __fill_distribution(sorted_symbol_list, value_to_symbol_map) # DEBUG
+    normal_distr = __normal_distribution(sorted_symbol_list, 80, 2000)
+    value_to_ascii_map = __build_distributed_value_to_ascii_map(sorted_symbol_list, normal_distr)
 
-    __write_value_map(value_to_ascii_map)
+    __write_value_map(value_to_symbol_map)
 
     for val in range(256):
         sym = value_to_ascii_map[val]
         print '{' + str(val) + ' : ' + str(ord(sym)) + ' = \'' + sym + '\' }'
+
+if not os._exists(VALUE_MAP):
+    __write_value_map()
+value_to_symbol_map = __load_value_map()
+sorted_symbol_list = __build_sorted_symbol_list(value_to_symbol_map)
 
 
 if __name__ == '__main__':
