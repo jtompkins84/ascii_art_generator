@@ -17,10 +17,16 @@ def __handle_args():
     :param args: list of arguments
     :return: False if no image files were entered
     """
-    global IMAGES, SCALE, DEBUG, DISTR_TYPE
+    global IMAGES, SCALE, SCALE_X, SCALE_Y, DEBUG, DISTR_TYPE
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--scale', type=float, nargs=1, default=0.25, help="Scales the image by this factor before generating the ASCII art text file.")
-    parser.add_argument('--debug', action='store_true', help="Prints some useful debug information.")
+    parser.add_argument('-s', '--scale', type=float, nargs=1, default=0.25,
+                        help="Scales the image by this factor before generating the ASCII art text file.")
+    parser.add_argument('-x', '--scale-x', type=float, nargs=1, default=2.25,
+                        help="Scales the width of the image by the following factor before generating the ASCII art text file. Default value works best with Monospace font.")
+    parser.add_argument('-y', '--scale-y', type=float, nargs=1, default=1.0,
+                        help="Scales the height of the image by the following factor before generating the ASCII art text file. Default value works best with Monospace font.")
+    parser.add_argument('--debug', action='store_true',
+                        help="Prints some useful debug information.")
     parser.add_argument('-d', '--distribution', choices=['even', 'fill', 'normal'],
                         default='normal', help="Try different distributions to achieve better results!")
     parser.add_argument('files', type=str, nargs='+', help="The images files to convert to ASCII art.")
@@ -33,13 +39,15 @@ def __handle_args():
     SCALE = args.scale
     if type(SCALE) is not float:
         SCALE = float(SCALE[0])
+    SCALE_X = args.scale_x
+    SCALE_Y = args.scale_y
 
     # Load image files into memory as numpy arrays, scale them according to input, and append to IMAGES list.
     for image in images:
         img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
         # 2 * SCALE on X-axis --> images need to be 'stretched' horizontally in order not to appear 'squished' after
         # being converted to ascii text.
-        img = cv2.resize(img, None, fx=(SCALE*2.25), fy=SCALE, interpolation=cv2.INTER_AREA)
+        img = cv2.resize(img, None, fx=(SCALE*SCALE_X), fy=(SCALE*SCALE_Y), interpolation=cv2.INTER_AREA)
         if img.size == 0:
             print 'Unable to read file \'' + image + '\'.'
         else:
