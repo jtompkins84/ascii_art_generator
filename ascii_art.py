@@ -7,16 +7,32 @@ from flask import Flask, request
 app = Flask(__name__)
 
 
-def __read_image(path, scale=0.25, scale_x=2.0, scale_y=1.0):
+def __to_float(optional):
+    if optional is not None:
+        return float(optional)
+    else:
+        return None
+
+
+def __read_image(path, scale=None, scale_x=None, scale_y=None):
+    if scale is None:
+        scale = 0.25
+    if scale_x is None:
+        scale_x = 2.0
+    if scale_y is None:
+        scale_y = 1.0
+
     img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     img = cv2.resize(img, None, fx=(scale * scale_x), fy=(scale * scale_y), interpolation=cv2.INTER_AREA)
     return img
 
 
-def __make_ascii_art(image, debug=False, distr_type='fill'):
+def __make_ascii_art(image, debug=False, distr_type=None):
     """
     Converts all images input as arguments to the program to ascii symbols using the value-to-symbol mapping.
     """
+    if distr_type is None:
+        distr_type = 'fill'
     value_to_ascii_map = symmap.get_value2ascii_map(image, distr_type)
     h, w = image.shape[:2]
     result = list()
@@ -43,8 +59,15 @@ def main():
         raise Exception('No loaded file')
     filename = secure_filename(file.filename)
     file.save(f'./uploads/{filename}')
-    image = __read_image(f'./uploads/{filename}')
-    ascii_art = __make_ascii_art(image)
+
+    form_input = request.form
+    scale = __to_float(form_input.get('scale'))
+    scale_x = __to_float(form_input.get('scale_x'))
+    scale_y = __to_float(form_input.get('scale_y'))
+    distr_type = form_input.get('distr_type')
+
+    image = __read_image(f'./uploads/{filename}', scale, scale_x, scale_y)
+    ascii_art = __make_ascii_art(image, distr_type=distr_type)
     return ascii_art
 
 
