@@ -1,8 +1,8 @@
 import cv2
+from flask import Flask, request
 from werkzeug.utils import secure_filename
 
 import symmap
-from flask import Flask, request
 
 app = Flask(__name__)
 
@@ -14,16 +14,27 @@ def __to_float(optional):
         return None
 
 
-def __read_image(path, scale=None, scale_x=None, scale_y=None):
+def __to_bool(optional):
+    if optional is not None:
+        return True
+    else:
+        return None
+
+
+def __read_image(path, scale=None, scale_x=None, scale_y=None, invert=None):
     if scale is None:
         scale = 0.25
     if scale_x is None:
         scale_x = 2.0
     if scale_y is None:
         scale_y = 1.0
+    if invert is None:
+        invert = False
 
     img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     img = cv2.resize(img, None, fx=(scale * scale_x), fy=(scale * scale_y), interpolation=cv2.INTER_AREA)
+    if invert:
+        img = cv2.bitwise_not(img)
     return img
 
 
@@ -65,8 +76,9 @@ def main():
     scale_x = __to_float(form_input.get('scale_x'))
     scale_y = __to_float(form_input.get('scale_y'))
     distr_type = form_input.get('distr_type')
+    invert = __to_bool(form_input.get('invert'))
 
-    image = __read_image(f'./uploads/{filename}', scale, scale_x, scale_y)
+    image = __read_image(f'./uploads/{filename}', scale, scale_x, scale_y, invert)
     ascii_art = __make_ascii_art(image, distr_type=distr_type)
     return ascii_art
 
