@@ -1,10 +1,12 @@
 import cv2
 from flask import Flask, request
+from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 
 import symmap
 
 app = Flask(__name__)
+cors = CORS(app)
 
 
 def __to_float(optional):
@@ -64,6 +66,7 @@ def __make_ascii_art(image, debug=False, distr_type=None):
 
 
 @app.route('/', methods=['POST'])
+@cross_origin()
 def main():
     file = request.files['image']
     if file.filename == '':
@@ -80,7 +83,7 @@ def main():
 
     image = __read_image(f'./uploads/{filename}', scale, scale_x, scale_y, invert)
     ascii_art = __make_ascii_art(image, distr_type=distr_type)
-    return ascii_art
+    return {'art': ascii_art}
 
 
 if __name__ == '__main__':
