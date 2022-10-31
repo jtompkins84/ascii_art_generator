@@ -17,5 +17,12 @@ or
 
 development server will run on localhost:5000
 
-- Send POST-request to this server with header ```Content-type: multipart/form-data``` and attached image (as form field named "image")
+- Send POST-request to this server with header ```Content-type: multipart/form-data```, attached image (as form field named "image") and optional arguments
 - Get response with raw ASCII-art string
+
+## Optional arguments
+- ```scale: float```
+- ```scale_x: float```
+- ```scale_y: float```
+- ```invert: bool```
+- ```distr_type: str ('even', 'normal' or 'fill')```
