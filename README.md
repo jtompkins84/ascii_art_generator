@@ -1,30 +1,28 @@
 # Ascii Art Generator
-Converts images to ASCII art text files.
+Simple server which converts image to ASCII art string.
 
 ## Requirements for Usage
-- [Python 2.7.x](https://www.python.org/)
-- OpenCV-Python ([how to install](http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_setup/py_setup_in_windows/py_setup_in_windows.html))
-- [Numpy](http://www.numpy.org/)
-
-### Optional
-- Gedit - Best text editor I've found to view the resulting text files
+- OpenCV-Python
+- Numpy
+- Flask
 
 ## Usage
-### Windows, OSX & Linux
 - Change to directory and run on terminal/command-line:
 
-```./ascii_art.py *image_file*```
+```./ascii_art.py```
 
 or
 
-```python ascii_art.py *image_file*```
+```python ascii_art.py```
 
-- Resulting files are output as text files to the same directory as the image. Use a text editor to view the results. You may need to drastically reduce the font size and linespacing. Suggested font is "Monospace," though if that is unavailable, most fonts should produce acceptable results.
+development server will run on localhost:5000
 
-## Examples
-### Original Image
-![Y U No meme](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/YUNo_meme.jpg "Y U No meme")
-### Generated ASCII Art (viewed using "Monospace" font in Gedit, 4pt font size)
-![Y U No ASCII art](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/yuno_example.PNG "Y U No ASCII art")
-### "Zoomed" version of above (font enlarged to 10pt)
-![Y U No ASCII art zoomed](https://github.com/jtompkins84/ascii_art_generator/blob/master/test_images/yuno_example_zoomed.PNG "Y U No ASCII art zoomed")
+- Send POST-request to this server with header ```Content-type: multipart/form-data```, attached image (as form field named "image") and optional arguments
+- Get response with raw ASCII-art string
+
+## Optional arguments
+- ```scale: float```
+- ```scale_x: float```
+- ```scale_y: float```
+- ```invert: bool```
+- ```distr_type: str ('even', 'normal' or 'fill')```

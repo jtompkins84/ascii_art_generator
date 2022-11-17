@@ -26,7 +26,7 @@ def __build_symbol_to_norm_map(symbols_filepath='./symbols.png'):
     # like a "sprite sheet."
     img = cv2.imread(symbols_filepath, cv2.IMREAD_GRAYSCALE)
     if img.size == 0:
-        print 'symmap.py unable to read \'' + symbols_filepath + '\'.'
+        print('symmap.py unable to read \'' + symbols_filepath + '\'.')
         return
     # create a directory for images of each individual character
     curr_path = os.getcwd()
@@ -49,13 +49,15 @@ def __build_symbol_to_norm_map(symbols_filepath='./symbols.png'):
             x_pos = j * cell_pixel_width
             cell = img[y_pos:y_pos + cell_pixel_height, x_pos:x_pos + cell_pixel_width]
             cell_num = 32 + (i * 16) + j
-            cv2.imwrite('./symbols/' + str(32 + (i * 16) + j) + '.png', cell) # creates images of symbols for debugging purposes
+            cv2.imwrite('./symbols/' + str(32 + (i * 16) + j) + '.png',
+                        cell)  # creates images of symbols for debugging purposes
             # cv2.norm Gives the vector norm of the image.
             # The more black there is in the image, the lower the norm value.
             cell_norm = int(cv2.norm(cell, cv2.NORM_L1))
             symbol_to_norm_dict[cell_num] = cell_norm
 
     return symbol_to_norm_dict
+
 
 def __build_clamped_symbol_to_norm_map(symbol_to_norm_map):
     """
@@ -65,7 +67,7 @@ def __build_clamped_symbol_to_norm_map(symbol_to_norm_map):
     :returns: clamped_norm_dict in format:  {ord(symbol): clamped norm value}
     """
     clamped_norm_dict = symbol_to_norm_map.copy()
-    norm_values = [symbol_to_norm_map[x] for x in symbol_to_norm_map] # extract norm values from symbol_to_norm_dict
+    norm_values = [symbol_to_norm_map[x] for x in symbol_to_norm_map]  # extract norm values from symbol_to_norm_dict
     max_val = max(norm_values)
     min_val = min(norm_values)
     for key in clamped_norm_dict:
@@ -157,15 +159,15 @@ def __fill_distribution(sorted_symbols_list, value_to_symbol_map):
     values_list = [key for key in value_to_symbol_map]
     values_list.sort()
     distribution = [0] * N
-    for i in range(N-1):
+    for i in range(N - 1):
         dif = values_list[i + 1] - values_list[i]
         if dif > 1:
             x1 = int(dif / 2)
             x2 = int(dif / 2) + (dif % 2)
             distribution[i] += x1
-            distribution[i+1] += x2
+            distribution[i + 1] += x2
         else:
-            distribution[i+1] = 1
+            distribution[i + 1] = 1
     distribution[-1] += 1
     return distribution
 
@@ -178,18 +180,18 @@ def __normal_distribution(sorted_symbols_list, mean, sigma2):
     character should appear when mapping gray-scale values to a symbol.
     """
     N = len(sorted_symbols_list)
-    G = 256.0 / (N-1) # the width of a distribution for each symbol
-    distribution = [(G * i) for i in range(N-1)]
+    G = 256.0 / (N - 1)  # the width of a distribution for each symbol
+    distribution = [(G * i) for i in range(N - 1)]
     distribution.append(256.0)
     for i in range(N):
         g = distribution[i]
-        d = (1 / (2 * math.pi * sigma2)) * math.exp(-((g - mean)**2) / (2 * sigma2)) # gaussian distribution formula
+        d = (1 / (2 * math.pi * sigma2)) * math.exp(-((g - mean) ** 2) / (2 * sigma2))  # gaussian distribution formula
         distribution[i] = d
     min_val = min(distribution)
     max_val = max(distribution)
     for i in range(N):
         val = distribution[i]
-        distribution[i] = (val - min_val) * (1 / (max_val - min_val)) # clamp values between 0 and 1
+        distribution[i] = (val - min_val) * (1 / (max_val - min_val))  # clamp values between 0 and 1
         distribution[i] = abs(1.0 - distribution[i])
         # The above inverts distribution such that higher probability values now contribute less to the sum.
         # This is necessary so that values closer to the mean are associated with more unique characters than those
@@ -205,7 +207,7 @@ def __normal_distribution(sorted_symbols_list, mean, sigma2):
     # The sum of the distribution at this point should technically be 256, but will usually be a number less than 256
     # because the quotient above is converted into and int, truncating the values. Also, zero values are artificially
     # being set to 1.
-    dif = 256 - sum(distribution) # gives the remaining number of distribution points to distribute
+    dif = 256 - sum(distribution)  # gives the remaining number of distribution points to distribute
     i = 0
     j = N - 1
     rng = range(N)
@@ -216,13 +218,13 @@ def __normal_distribution(sorted_symbols_list, mean, sigma2):
     # TODO   then the algorithm should iterate and increment over the right side 3 times before incrementing any values on the left.
     while dif > 0 and i in rng and j in rng:
         if distribution[i] == distribution[j]:
-            distribution[i] += 1            # increment distribution
-            dif -= 1                        # decrement number of distribution points left to distribute
-            i += 1                          # increment left iterator
+            distribution[i] += 1  # increment distribution
+            dif -= 1  # decrement number of distribution points left to distribute
+            i += 1  # increment left iterator
             if dif > 0:
-                distribution[j] += 1        # increment distribution
-                dif -=1                     # decrement number of distribution points left to distribute
-                j -=1                       # decrement right iterator
+                distribution[j] += 1  # increment distribution
+                dif -= 1  # decrement number of distribution points left to distribute
+                j -= 1  # decrement right iterator
         elif distribution[i] > distribution[j]:
             distribution[i] += 1
             dif -= 1
@@ -245,8 +247,8 @@ def __calc_mean_sigma(img):
     mean = mean / N
     for i in range(height):
         for j in range(width):
-            sigma2 += (img[i][j] - mean)**2
-    sigma2 = sigma2 / (N-1)
+            sigma2 += (img[i][j] - mean) ** 2
+    sigma2 = sigma2 / (N - 1)
     return mean, sigma2
 
 
@@ -276,12 +278,12 @@ def __load_value_map():
             value_to_symbol_map[int(row['value'])] = row['symbol']
 
         val_map_file.close()
-        print 'value-to-symbol map loaded..'
+        print('value-to-symbol map loaded..')
     return value_to_symbol_map
 
 
 def __is_special_char(sym):
-    return (sym < 65 or (sym > 90 and sym < 97) or sym > 122)
+    return sym < 65 or (90 < sym < 97) or sym > 122
 
 
 def get_value2ascii_map(img=None, distr_type='even'):
@@ -302,8 +304,8 @@ def main():
     clamped_symbol_to_norm_map = __build_clamped_symbol_to_norm_map(symbol_to_norm_map)
     value_to_symbol_map = __build_value_to_symbol_map(clamped_symbol_to_norm_map)
     sorted_symbol_list = __build_sorted_symbol_list(value_to_symbol_map)
-    even_distr = __even_distribution(sorted_symbol_list)
-    fill_distr = __fill_distribution(sorted_symbol_list, value_to_symbol_map) # DEBUG
+    # even_distr = __even_distribution(sorted_symbol_list)
+    # fill_distr = __fill_distribution(sorted_symbol_list, value_to_symbol_map)  # DEBUG
     normal_distr = __normal_distribution(sorted_symbol_list, 80, 2000)
     value_to_ascii_map = __build_distributed_value_to_ascii_map(sorted_symbol_list, normal_distr)
 
@@ -311,13 +313,13 @@ def main():
 
     for val in range(256):
         sym = value_to_ascii_map[val]
-        print '{' + str(val) + ' : ' + str(ord(sym)) + ' = \'' + sym + '\' }'
+        print('{' + str(val) + ' : ' + str(ord(sym)) + ' = \'' + sym + '\' }')
 
-if not os._exists(VALUE_MAP):
+
+if not os.path.exists(VALUE_MAP):
     __write_value_map()
 value_to_symbol_map = __load_value_map()
 sorted_symbol_list = __build_sorted_symbol_list(value_to_symbol_map)
-
 
 if __name__ == '__main__':
     main()
