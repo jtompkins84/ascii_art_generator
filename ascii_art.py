@@ -1,4 +1,5 @@
 import cv2
+import os
 from flask import Flask, request
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
@@ -72,8 +73,9 @@ def main():
     if file.filename == '':
         raise Exception('No loaded file')
     filename = secure_filename(file.filename)
+    if not os.path.exists("uploads"):
+        os.makedirs("uploads")
     file.save(f'./uploads/{filename}')
-
     form_input = request.form
     scale = __to_float(form_input.get('scale'))
     scale_x = __to_float(form_input.get('scale_x'))
